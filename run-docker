@@ -1,2 +1,2 @@
 #!/bin/sh
-docker run -v $(pwd):/project/zerotooth -it libsnark-dev-env /bin/bash
+docker run -v $(pwd):/project/zerotooth -it zerotooth-dev-env /bin/bash

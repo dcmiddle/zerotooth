@@ -1,7 +1,10 @@
 cmake_minimum_required(VERSION 2.8)
 
-project(libsnark-tutorial)
+project(zerotooth)
 
+set(CMAKE_CXX_FLAGS "-Wall -std=c++11 -Wall -Wextra -Wfatal-errors -O2") 
+add_definitions(-DCURVE_BN128 -DBINARY_OUTPUT -DWITH_PROCPS=OFF -DBN_SUPPORT_SNARK=1 -DMONTGOMERY_OUTPUT -DUSE_ASM)
+  
 set(
   CURVE
   "BN128"
@@ -85,3 +88,4 @@ include_directories(.)
 
 add_subdirectory(depends)
 add_subdirectory(src)
+

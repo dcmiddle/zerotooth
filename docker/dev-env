@@ -1,0 +1,36 @@
+# Description:
+#   Creates a container that can build libsnark and enable development
+#   from the host by mapping the directory between the host and the container.
+#
+#
+# Build docker image:
+#   (From the root directory of the repo)
+#   $ docker build . -f docker/dev-env -t zerotooth-dev-env
+#
+# Run interactive container for libsnark compilation and execution
+#   (From the root directory of the repo)
+#   $ docker run -v $(pwd):/project/libsnark -it zerotooth /bin/bash
+#
+
+
+FROM ubuntu:xenial
+
+WORKDIR /root
+
+RUN apt-get update && \
+    apt-get install -y \
+    wget \
+    unzip \
+    curl \
+    build-essential \
+    cmake \
+    git \
+    libgmp3-dev \
+    libprocps4-dev \
+    python-markdown \
+    libboost-all-dev \
+    libssl-dev \
+    pkg-config \
+    vim
+
+ENV LD_LIBRARY_PATH $LD_LIBRARY_PATH:./depends/libsnark
