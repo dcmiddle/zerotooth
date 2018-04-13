@@ -1,0 +1,2 @@
+#!/bin/sh
+docker build . -f docker/dev-env -t libsnark-dev-env
