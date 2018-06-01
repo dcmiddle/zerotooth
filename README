@@ -13,9 +13,14 @@ there I switchted to gadgetlib1. I've run up against a separate segfault there.
 If you would also like to experience a zero knowledge segfault make sure
 you have Docker installed and then enter the following commands
 ---------------------------------
+# Fetch the dependency source
+git submodule update --init --recursive
+
+# Make yourself a dev environment
 ./build-docker  # builds the docker image for development and running
 ./run-docker  # drops you into a shell inside the running container
 
+# From within the dev environment
 mkdir build 
 cd build
 cmake ..

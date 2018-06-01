@@ -9,7 +9,7 @@
 #
 # Run interactive container for libsnark compilation and execution
 #   (From the root directory of the repo)
-#   $ docker run -v $(pwd):/project/libsnark -it zerotooth /bin/bash
+#   $ docker run -v $(pwd):/project/zerotooth -it zerotooth /bin/bash
 #
 
 
