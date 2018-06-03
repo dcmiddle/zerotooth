@@ -13,12 +13,11 @@ std::string VKPATH = "verification.key";
 typedef libsnark::default_r1cs_ppzksnark_pp ppzksnark_ppT;
 typedef libff::Fr<libff::default_ec_pp> Fp;
 
-// todo: Cleanup namespacing
+
 using namespace libsnark;
 using std::cout;
 using std::endl;
 
-// TODO: this pb seems to result in a segfault generating keys
 template<typename ppT>
 protoboard<Fp> create_intkey_set_protoboard(){
     cout << "Enter create protoboard" << endl;
@@ -124,16 +123,16 @@ template<typename ppT>
 void generator()
 {
     cout << "Enter generator" << endl;
-    //protoboard<Fp> pb = create_intkey_set_protoboard<Fp>();
+    protoboard<Fp> pb = create_intkey_set_protoboard<Fp>();
     //protoboard<Fp> pb = test_comparison_gadget(8);
-    protoboard<Fp> pb = test_conjunction_gadget(2);
+    //protoboard<Fp> pb = test_conjunction_gadget(2);
 
     cout << "Extract Constraint System" << endl;
     //r1cs_constraint_system<ppT> cs = pb.get_constraint_system();
     //r1cs_ppzksnark_constraint_system<ppT> cs = pb.get_constraint_system();
     auto cs = pb.get_constraint_system();
     cout << "Generate Key Pair" << endl;
-    // This prints a whole bunch of junk. Look into squelching it.
+    // TODO: This prints a whole bunch of junk. Look into squelching it.
     r1cs_ppzksnark_keypair<ppT> kp = r1cs_ppzksnark_generator<ppT>(cs);
 
     cout << "Write PK file" << endl;
@@ -179,12 +178,13 @@ cout << "Exit verifier" << endl;
 int main () {
     cout << "Enter Main" << endl;
 
+    ppzksnark_ppT::init_public_params();
     //const size_t n = 8;
     //test_comparison_gadget(n);
     generator<ppzksnark_ppT>();
-/*    prover<ppzksnark_ppT>(4);
+    prover<ppzksnark_ppT>(4);
     verifier<ppzksnark_ppT>();
-*/
+
     cout << "Exit Main" << endl;
     return 0;
 }
