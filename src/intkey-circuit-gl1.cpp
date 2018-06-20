@@ -45,91 +45,13 @@ protoboard<Fp> create_intkey_set_protoboard(){
     return pb;
 }
 
-// TODO: Using something besides the comparison gadget
-protoboard<Fp> test_conjunction_gadget(const size_t n)
-{
-    printf("testing conjunction_gadget on all %zu bit strings\n", n);
-
-    protoboard<Fp> pb;
-    pb_variable_array<Fp> inputs;
-    inputs.allocate(pb, n, "inputs");
-
-    pb_variable<Fp> output;
-    output.allocate(pb, "output");
-
-    conjunction_gadget<Fp> c(pb, inputs, output, "c");
-    c.generate_r1cs_constraints();
-
-    for (size_t w = 0; w < 1ul<<n; ++w)
-    {
-        for (size_t j = 0; j < n; ++j)
-        {
-            pb.val(inputs[j]) = (w & (1ul<<j)) ? Fp::one() : Fp::zero();
-        }
-
-        c.generate_r1cs_witness();
-
-        printf("positive test for %zu\n", w);
-        assert(pb.val(output) == (w == (1ul<<n) - 1 ? Fp::one() : Fp::zero()));
-        assert(pb.is_satisfied());
-
-        printf("negative test for %zu\n", w);
-        pb.val(output) = (w == (1ul<<n) - 1 ? Fp::zero() : Fp::one());
-        assert(!pb.is_satisfied());
-    }
-
-    libff::print_time("conjunction tests successful");
-    return pb;
-}
-
-protoboard<Fp> test_comparison_gadget(const size_t n)
-{
-    printf("testing comparison_gadget on all %zu bit inputs\n", n);
-
-    protoboard<Fp> pb;
-
-    pb_variable<Fp> A, B, less, less_or_eq;
-    A.allocate(pb, "A");
-    B.allocate(pb, "B");
-    less.allocate(pb, "less");
-    less_or_eq.allocate(pb, "less_or_eq");
-
-    comparison_gadget<Fp> cmp(pb, n, A, B, less, less_or_eq, "cmp");
-    cmp.generate_r1cs_constraints();
-
-    for (size_t a = 0; a < 1ul<<n; ++a)
-    {
-        for (size_t b = 0; b < 1ul<<n; ++b)
-        {
-            pb.val(A) = Fp(a);
-            pb.val(B) = Fp(b);
-
-            cmp.generate_r1cs_witness();
-
-#ifdef DEBUG
-            printf("positive test for %zu < %zu\n", a, b);
-#endif
-            assert(pb.val(less) == (a < b ? Fp::one() : Fp::zero()));
-            assert(pb.val(less_or_eq) == (a <= b ? Fp::one() : Fp::zero()));
-            assert(pb.is_satisfied());
-        }
-    }
-
-    libff::print_time("comparison tests successful");
-    return pb;
-}
-
 template<typename ppT>
 void generator()
 {
     cout << "Enter generator" << endl;
     protoboard<Fp> pb = create_intkey_set_protoboard<Fp>();
-    //protoboard<Fp> pb = test_comparison_gadget(8);
-    //protoboard<Fp> pb = test_conjunction_gadget(2);
 
     cout << "Extract Constraint System" << endl;
-    //r1cs_constraint_system<ppT> cs = pb.get_constraint_system();
-    //r1cs_ppzksnark_constraint_system<ppT> cs = pb.get_constraint_system();
     auto cs = pb.get_constraint_system();
     cout << "Generate Key Pair" << endl;
     // TODO: This prints a whole bunch of junk. Look into squelching it.
@@ -179,8 +101,6 @@ int main () {
     cout << "Enter Main" << endl;
 
     ppzksnark_ppT::init_public_params();
-    //const size_t n = 8;
-    //test_comparison_gadget(n);
     generator<ppzksnark_ppT>();
     prover<ppzksnark_ppT>(4);
     verifier<ppzksnark_ppT>();
