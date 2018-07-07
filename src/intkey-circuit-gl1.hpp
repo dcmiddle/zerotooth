@@ -25,14 +25,16 @@ class IntkeyCircuit {
 
         //Protoboard variables for comparison gadgets
         //Less Than
-        comparison_gadget<Fp> lessThanMax;
+        comparison_gadget<Fp> *lessThanMax;
         size_t bitLen_lt;
-        pb_variable<ppT> lhs_lt, rhs_lt, less_lt, lessOrEqual_lt;
+        pb_linear_combination<Fp> lhs_lt, rhs_lt;
+        pb_variable<Fp> less_lt, lessOrEqual_lt;
 
         //Greater Than
-        comparison_gadget<Fp> greaterThanMin;
+        comparison_gadget<Fp> *greaterThanMin;
         size_t bitLen_gt;
-        pb_variable<ppT> lhs_gt, rhs_gt, less_gt, lessOrEqual_gt;
+        pb_linear_combination<Fp> lhs_gt, rhs_gt;
+        pb_variable<Fp> less_gt, lessOrEqual_gt;
 
 
     public:
@@ -55,16 +57,21 @@ IntkeyCircuit<Fp,ppT>::IntkeyCircuit() {
 
     // Add "intkey set" constraint to pb (32-bit unsigned int)
     // Valid values must be integers in the range of 0 through 2^32 - 1
+    variable<Fp> A, B;
+    lhs_lt.add_term(A);
+    rhs_lt.add_term(B);
     lessThanMax = new comparison_gadget<Fp>(
         pb, bitLen_lt, lhs_lt, rhs_lt, less_lt, lessOrEqual_lt, "LessThanMax");
 
-    lessThanMax.generate_r1cs_constraints();
+    lessThanMax->generate_r1cs_constraints();
 
-
+    variable<Fp> C, D;
+    lhs_gt.add_term(C);
+    rhs_gt.add_term(D);
     greaterThanMin = new comparison_gadget<Fp>(
         pb, bitLen_gt, lhs_gt, rhs_gt, less_gt, lessOrEqual_gt, "greaterThanMin");
 
-    greaterThanMin.generate_r1cs_constraints();
+    greaterThanMin->generate_r1cs_constraints();
 
 }
 
@@ -108,21 +115,21 @@ r1cs_ppzksnark_proof<ppT> IntkeyCircuit<Fp,ppT>::prove(uint32_t value)
     //Assign circuit values for lessThanMax gadget
     // value <= 2^32 - 1
     pb.val(bitLen_lt) = Fp(32);
-    pb.val(lhs_lt) = Fp(value);
-    pb.val(rhs_lt) = Fp(0xFFFFFFFF);
+    pb.lc_val(lhs_lt) = Fp(value);
+    pb.lc_val(rhs_lt) = Fp(0xFFFFFFFF);
     pb.val(less_lt) = Fp::one();
     pb.val(lessOrEqual_lt) = Fp::one();
 
     //Assign circuit values for greaterThanMin gadget
     // 0 <= value
     pb.val(bitLen_gt) = Fp(32);
-    pb.val(lhs_gt) = Fp::zero();
-    pb.val(rhs_gt) = Fp(value);
+    pb.lc_val(lhs_gt) = Fp::zero();
+    pb.lc_val(rhs_gt) = Fp(value);
     pb.val(less_gt) = Fp::one();
     pb.val(lessOrEqual_gt) = Fp::one();
 
-    lessThanMax.generate_r1cs_witness();
-    greaterThanMin.generate_r1cs_witness();
+    lessThanMax->generate_r1cs_witness();
+    greaterThanMin->generate_r1cs_witness();
 
     if (!pb.is_satisfied()) {
         cout << "Error generating valid proof";
