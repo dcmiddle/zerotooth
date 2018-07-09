@@ -11,6 +11,7 @@
 
 std::string PKPATH = "proving.key";
 std::string VKPATH = "verification.key";
+std::string PVKPATH = "processed_verification.key";
 
 using namespace libsnark;
 using std::cout;
@@ -78,6 +79,7 @@ IntkeyCircuit<Fp,ppT>::IntkeyCircuit() {
 template<typename Fp, typename ppT>
 void IntkeyCircuit<Fp,ppT>::generate()
 {
+    // TODO: output the processed key (pvk) too.
     cout << "Enter generator" << endl;
 
     cout << "Extract Constraint System" << endl;
@@ -98,6 +100,14 @@ void IntkeyCircuit<Fp,ppT>::generate()
     vk_file << kp.vk;
     vk_file.close();
     cout << "Exit generator" << endl;
+
+    cout << "Write Processed_VK file" << endl;
+    std::ofstream pvk_file;
+    pvk_file.open(PVKPATH);
+    auto pvk = r1cs_ppzksnark_verifier_process_vk<ppT>(kp.vk);
+    pvk_file << pvk;
+    pvk_file.close();
+    cout << "Exit generator" << endl;
 }
 
 template<typename Fp, typename ppT>
@@ -112,6 +122,7 @@ r1cs_ppzksnark_proof<ppT> IntkeyCircuit<Fp,ppT>::prove(uint32_t value)
     read_pk_file >> pk;
     read_pk_file.close();
 
+    //todo: define constants
     //Assign circuit values for lessThanMax gadget
     // value <= 2^32 - 1
     pb.val(bitLen_lt) = Fp(32);
@@ -147,15 +158,15 @@ bool IntkeyCircuit<Fp,ppT>::verify(r1cs_ppzksnark_proof<ppT> proof)
 {
     cout << "Enter verifier" << endl;
     //todo: add exception handling
-    std::ifstream read_vk_file;
-    read_vk_file.open(VKPATH);
-    r1cs_ppzksnark_verification_key<ppT> vk;
-    read_vk_file >> vk;
-    read_vk_file.close();
+    std::ifstream read_pvk_file;
+    read_pvk_file.open(PVKPATH);
+    r1cs_ppzksnark_processed_verification_key<ppT> pvk;
+    read_pvk_file >> pvk;
+    read_pvk_file.close();
 
     //FIXME - write out primary input in prove();
     r1cs_primary_input<Fp> primary_input;
-    r1cs_ppzksnark_online_verifier_strong_IC<ppT>(vk, primary_input, proof);
+    r1cs_ppzksnark_online_verifier_strong_IC<ppT>(pvk, primary_input, proof);
 
     cout << "Exit verifier" << endl;
     return false;
