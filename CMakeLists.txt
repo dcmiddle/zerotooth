@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 2.8)
 
 project(zerotooth)
 
+set(CMAKE_BUILD_TYPE Debug)
 set(CMAKE_CXX_FLAGS "-std=c++11 -Wfatal-errors -O2") 
 add_definitions(-DCURVE_BN128 -DBINARY_OUTPUT -DWITH_PROCPS=OFF -DBN_SUPPORT_SNARK=1 -DMONTGOMERY_OUTPUT -DUSE_ASM)
   

@@ -31,6 +31,7 @@ RUN apt-get update && \
     libboost-all-dev \
     libssl-dev \
     pkg-config \
+    gdb \
     vim
 
 ENV LD_LIBRARY_PATH $LD_LIBRARY_PATH:./depends/libsnark
