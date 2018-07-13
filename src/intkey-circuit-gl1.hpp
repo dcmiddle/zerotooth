@@ -26,14 +26,14 @@ class IntkeyCircuit {
 
         //Protoboard variables for comparison gadgets
         //Less Than
-        comparison_gadget<Fp> lessThanMax;
+        comparison_gadget<Fp> *lessThanMax;
         size_t bitLen_lt;
-        pb_variable<ppT> lhs_lt, rhs_lt, less_lt, lessOrEqual_lt;
+        pb_variable<Fp> lhs_lt, rhs_lt, less_lt, lessOrEqual_lt;
 
         //Greater Than
-        comparison_gadget<Fp> greaterThanMin;
+        comparison_gadget<Fp> *greaterThanMin;
         size_t bitLen_gt;
-        pb_variable<ppT> lhs_gt, rhs_gt, less_gt, lessOrEqual_gt;
+        pb_variable<Fp> lhs_gt, rhs_gt, less_gt, lessOrEqual_gt;
 
 
     public:
@@ -54,18 +54,29 @@ template<typename Fp, typename ppT>
 IntkeyCircuit<Fp,ppT>::IntkeyCircuit() {
     ppT::init_public_params();
 
+    bitLen_lt = 32;
+    lhs_lt.allocate(pb, "LHS of LessThan");
+    rhs_lt.allocate(pb, "RHS of LessThan");
+    less_lt.allocate(pb, "Less bool of LessThan");
+    lessOrEqual_lt.allocate(pb, "LessOrEqual bool of LessThan");
+
     // Add "intkey set" constraint to pb (32-bit unsigned int)
     // Valid values must be integers in the range of 0 through 2^32 - 1
     lessThanMax = new comparison_gadget<Fp>(
         pb, bitLen_lt, lhs_lt, rhs_lt, less_lt, lessOrEqual_lt, "LessThanMax");
 
-    lessThanMax.generate_r1cs_constraints();
+    lessThanMax->generate_r1cs_constraints();
 
+    bitLen_gt = 32;
+    lhs_gt.allocate(pb, "LHS of LessThan");
+    rhs_gt.allocate(pb, "RHS of LessThan");
+    less_gt.allocate(pb, "Less bool of LessThan");
+    lessOrEqual_gt.allocate(pb, "LessOrEqual bool of LessThan");
 
     greaterThanMin = new comparison_gadget<Fp>(
         pb, bitLen_gt, lhs_gt, rhs_gt, less_gt, lessOrEqual_gt, "greaterThanMin");
 
-    greaterThanMin.generate_r1cs_constraints();
+    greaterThanMin->generate_r1cs_constraints();
 
 }
 
@@ -132,8 +143,8 @@ r1cs_ppzksnark_proof<ppT> IntkeyCircuit<Fp,ppT>::prove(uint32_t value)
     pb.val(less_gt) = Fp::one();
     pb.val(lessOrEqual_gt) = Fp::one();
 
-    lessThanMax.generate_r1cs_witness();
-    greaterThanMin.generate_r1cs_witness();
+    lessThanMax->generate_r1cs_witness();
+    greaterThanMin->generate_r1cs_witness();
 
     if (!pb.is_satisfied()) {
         cout << "Error generating valid proof";
