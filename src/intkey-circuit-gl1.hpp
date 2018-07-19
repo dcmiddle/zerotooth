@@ -17,6 +17,12 @@ using namespace libsnark;
 using std::cout;
 using std::endl;
 
+// Convenience struct for packaging primary input and proof together
+// TODO: cleanup templating. Consider c++11 type aliasing.
+typedef struct InputAndProof {
+    r1cs_primary_input<libff::Fr<libff::default_ec_pp>> input;
+    r1cs_ppzksnark_proof<libsnark::default_r1cs_ppzksnark_pp> proof;
+} InputAndProof;
 
 template<typename Fp, typename ppT>
 class IntkeyCircuit {
@@ -35,7 +41,6 @@ class IntkeyCircuit {
         size_t bitLen_gt;
         pb_variable<Fp> lhs_gt, rhs_gt, less_gt, lessOrEqual_gt;
 
-
     public:
         IntkeyCircuit();
 
@@ -43,11 +48,10 @@ class IntkeyCircuit {
         void generate();
 
         //Create a proof for some intkey value
-        r1cs_ppzksnark_proof<ppT> prove(uint32_t value);
+        InputAndProof prove(uint32_t value);
 
         //Verify a proof of an intkey value;
-        bool verify(r1cs_ppzksnark_proof<ppT> proof);
-
+        bool verify(InputAndProof input_and_proof);
 };
 
 template<typename Fp, typename ppT>
@@ -115,7 +119,7 @@ void IntkeyCircuit<Fp,ppT>::generate()
 }
 
 template<typename Fp, typename ppT>
-r1cs_ppzksnark_proof<ppT> IntkeyCircuit<Fp,ppT>::prove(uint32_t value)
+InputAndProof IntkeyCircuit<Fp,ppT>::prove(uint32_t value)
 {
     cout << "Enter prover" << endl;
 
@@ -147,18 +151,23 @@ r1cs_ppzksnark_proof<ppT> IntkeyCircuit<Fp,ppT>::prove(uint32_t value)
     greaterThanMin->generate_r1cs_witness();
 
     if (!pb.is_satisfied()) {
-        cout << "Error generating valid proof";
+        cout << "Error generating valid proof" << endl;
+    } else {
+        cout << "Constraints satisfied" << endl;
     }
 
     r1cs_ppzksnark_proof<ppT> proof =
         r1cs_ppzksnark_prover<ppT>(pk, pb.primary_input(), pb.auxiliary_input());
 
+    InputAndProof input_and_proof;
+    input_and_proof.input = pb.primary_input();
+    input_and_proof.proof = proof;
     cout << "Exit prover" << endl;
-    return proof;
+    return input_and_proof;
 }
 
 template<typename Fp, typename ppT>
-bool IntkeyCircuit<Fp,ppT>::verify(r1cs_ppzksnark_proof<ppT> proof)
+bool IntkeyCircuit<Fp,ppT>::verify(InputAndProof input_and_proof)
 {
     cout << "Enter verifier" << endl;
     //todo: add exception handling
@@ -168,12 +177,11 @@ bool IntkeyCircuit<Fp,ppT>::verify(r1cs_ppzksnark_proof<ppT> proof)
     read_pvk_file >> pvk;
     read_pvk_file.close();
 
-    //FIXME - write out primary input in prove();
-    r1cs_primary_input<Fp> primary_input;
-    r1cs_ppzksnark_online_verifier_strong_IC<ppT>(pvk, primary_input, proof);
+    bool result;
+    result = r1cs_ppzksnark_online_verifier_strong_IC<ppT>(pvk, input_and_proof.input, input_and_proof.proof);
 
     cout << "Exit verifier" << endl;
-    return false;
+    return result;
 }
 
 

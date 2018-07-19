@@ -16,10 +16,9 @@ int main() {
     circuit.generate();
 
     uint32_t my_secret_value = 33;
-    r1cs_ppzksnark_proof<ppzksnark_ppT> proof;
-    proof = circuit.prove(my_secret_value);
+    InputAndProof input_and_proof = circuit.prove(my_secret_value);
 
-    if(circuit.verify(proof))
+    if(circuit.verify(input_and_proof))
         cout << "Valid Proof" << endl;
     else
         cout << "DANGER Invalid Proof" << endl;
