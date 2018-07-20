@@ -17,14 +17,18 @@ using namespace libsnark;
 using std::cout;
 using std::endl;
 
+//Note: libsnark::default_r1cs_ppzksnark_pp is libff::default_ec_pp
+typedef libsnark::default_r1cs_ppzksnark_pp ppT;
+typedef libff::Fr<libff::default_ec_pp> Fp;
+
+
 // Convenience struct for packaging primary input and proof together
 // TODO: cleanup templating. Consider c++11 type aliasing.
 typedef struct InputAndProof {
-    r1cs_primary_input<libff::Fr<libff::default_ec_pp>> input;
-    r1cs_ppzksnark_proof<libsnark::default_r1cs_ppzksnark_pp> proof;
+    r1cs_primary_input<Fp> input;
+    r1cs_ppzksnark_proof<ppT> proof;
 } InputAndProof;
 
-template<typename Fp, typename ppT>
 class IntkeyCircuit {
     private:
         //Protoboard
@@ -64,8 +68,7 @@ class IntkeyCircuit {
         bool verify(InputAndProof input_and_proof);
 };
 
-template<typename Fp, typename ppT>
-IntkeyCircuit<Fp,ppT>::IntkeyCircuit() {
+IntkeyCircuit::IntkeyCircuit() {
     ppT::init_public_params();
 
     bit_len = 32;
@@ -95,8 +98,7 @@ IntkeyCircuit<Fp,ppT>::IntkeyCircuit() {
         "Constant True constraint for comparison gadgets");
 }
 
-template<typename Fp, typename ppT>
-void IntkeyCircuit<Fp,ppT>::generate()
+void IntkeyCircuit::generate()
 {
     // TODO: output the processed key (pvk) too.
     cout << "Enter generator" << endl;
@@ -129,8 +131,7 @@ void IntkeyCircuit<Fp,ppT>::generate()
     cout << "Exit generator" << endl;
 }
 
-template<typename Fp, typename ppT>
-InputAndProof IntkeyCircuit<Fp,ppT>::prove(uint32_t value)
+InputAndProof IntkeyCircuit::prove(uint32_t value)
 {
     cout << "Enter prover" << endl;
 
@@ -168,8 +169,7 @@ InputAndProof IntkeyCircuit<Fp,ppT>::prove(uint32_t value)
     return input_and_proof;
 }
 
-template<typename Fp, typename ppT>
-bool IntkeyCircuit<Fp,ppT>::verify(InputAndProof input_and_proof)
+bool IntkeyCircuit::verify(InputAndProof input_and_proof)
 {
     cout << "Enter verifier" << endl;
     //todo: add exception handling
