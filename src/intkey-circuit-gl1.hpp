@@ -30,16 +30,26 @@ class IntkeyCircuit {
         //Protoboard
         protoboard<Fp> pb;
 
-        //Protoboard variables for comparison gadgets
-        //Less Than
-        comparison_gadget<Fp> *lessThanMax;
-        size_t bitLen_lt;
-        pb_variable<Fp> lhs_lt, rhs_lt, less_lt, lessOrEqual_lt;
+        ///Protoboard variables for comparison gadgets
 
-        //Greater Than
+        // The value we want to constrain to fall within the defined range
+        pb_variable<Fp> intkey_value;
+
+        // The min and max values to constrain intkey_value.
+        pb_variable<Fp> intkey_min, intkey_max;
+        
+        //Boolean value we need to be true across gadgets and both less and less or eq.
+        pb_variable<Fp> is_less;
+
+        // The bit length of the value. Used to let the gadget know how to determine range.
+        size_t bit_len;
+
+        //Less Than gadget; i.e. The value is less than the intkey maximum.
+        comparison_gadget<Fp> *lessThanMax;
+        
+        //Greater Than gadget; i.e. The value is greater than the intkey minimum.
         comparison_gadget<Fp> *greaterThanMin;
-        size_t bitLen_gt;
-        pb_variable<Fp> lhs_gt, rhs_gt, less_gt, lessOrEqual_gt;
+
 
     public:
         IntkeyCircuit();
@@ -58,27 +68,21 @@ template<typename Fp, typename ppT>
 IntkeyCircuit<Fp,ppT>::IntkeyCircuit() {
     ppT::init_public_params();
 
-    bitLen_lt = 32;
-    lhs_lt.allocate(pb, "LHS of LessThan");
-    rhs_lt.allocate(pb, "RHS of LessThan");
-    less_lt.allocate(pb, "Less bool of LessThan");
-    lessOrEqual_lt.allocate(pb, "LessOrEqual bool of LessThan");
+    bit_len = 32;
+    intkey_value.allocate(pb, "Intkey Value");
+    intkey_min.allocate(pb, "Intkey Min");
+    intkey_max.allocate(pb, "Intkey Max");
+    is_less.allocate(pb, "Bool for Less Than and Less or Eq");
 
     // Add "intkey set" constraint to pb (32-bit unsigned int)
     // Valid values must be integers in the range of 0 through 2^32 - 1
     lessThanMax = new comparison_gadget<Fp>(
-        pb, bitLen_lt, lhs_lt, rhs_lt, less_lt, lessOrEqual_lt, "LessThanMax");
+        pb, bit_len, intkey_value, intkey_max, is_less, is_less, "LessThanMax");
 
     lessThanMax->generate_r1cs_constraints();
 
-    bitLen_gt = 32;
-    lhs_gt.allocate(pb, "LHS of LessThan");
-    rhs_gt.allocate(pb, "RHS of LessThan");
-    less_gt.allocate(pb, "Less bool of LessThan");
-    lessOrEqual_gt.allocate(pb, "LessOrEqual bool of LessThan");
-
     greaterThanMin = new comparison_gadget<Fp>(
-        pb, bitLen_gt, lhs_gt, rhs_gt, less_gt, lessOrEqual_gt, "greaterThanMin");
+        pb, bit_len, intkey_min, intkey_value, is_less, is_less, "greaterThanMin");
 
     greaterThanMin->generate_r1cs_constraints();
 
@@ -131,21 +135,12 @@ InputAndProof IntkeyCircuit<Fp,ppT>::prove(uint32_t value)
     read_pk_file.close();
 
     //todo: define constants
-    //Assign circuit values for lessThanMax gadget
-    // value <= 2^32 - 1
-    pb.val(bitLen_lt) = Fp(32);
-    pb.val(lhs_lt) = Fp(value);
-    pb.val(rhs_lt) = Fp(0xFFFFFFFF);
-    pb.val(less_lt) = Fp::one();
-    pb.val(lessOrEqual_lt) = Fp::one();
-
-    //Assign circuit values for greaterThanMin gadget
-    // 0 <= value
-    pb.val(bitLen_gt) = Fp(32);
-    pb.val(lhs_gt) = Fp::zero();
-    pb.val(rhs_gt) = Fp(value);
-    pb.val(less_gt) = Fp::one();
-    pb.val(lessOrEqual_gt) = Fp::one();
+    //Assign circuit variables to prove: min <= value <= max
+    pb.val(bit_len) = Fp(32);
+    pb.val(intkey_value) = Fp(value);
+    pb.val(intkey_min) = Fp::zero();
+    pb.val(intkey_max) = Fp(0xFFFFFFFF);
+    pb.val(is_less) = Fp::one();
 
     lessThanMax->generate_r1cs_witness();
     greaterThanMin->generate_r1cs_witness();
