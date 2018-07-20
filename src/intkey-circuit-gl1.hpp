@@ -86,6 +86,13 @@ IntkeyCircuit<Fp,ppT>::IntkeyCircuit() {
 
     greaterThanMin->generate_r1cs_constraints();
 
+    // Add constant constraints
+    generate_r1cs_equals_const_constraint(pb, (pb_linear_combination<Fp>)intkey_min, Fp::zero(), \
+        "Min value constant constraint of 0");
+    generate_r1cs_equals_const_constraint(pb, (pb_linear_combination<Fp>)intkey_max, Fp(0xFFFFFFFF)), \
+        "Max value constant constraint of 2^32-1";
+    generate_r1cs_equals_const_constraint(pb, (pb_linear_combination<Fp>)is_less, Fp::one()), \
+        "Constant True constraint for comparison gadgets";
 }
 
 template<typename Fp, typename ppT>
