@@ -23,7 +23,6 @@ typedef libff::Fr<libff::default_ec_pp> Fp;
 
 
 // Convenience struct for packaging primary input and proof together
-// TODO: cleanup templating. Consider c++11 type aliasing.
 typedef struct InputAndProof {
     r1cs_primary_input<Fp> input;
     r1cs_ppzksnark_proof<ppT> proof;
@@ -100,7 +99,6 @@ IntkeyCircuit::IntkeyCircuit() {
 
 void IntkeyCircuit::generate()
 {
-    // TODO: output the processed key (pvk) too.
     cout << "Enter generator" << endl;
 
     cout << "Extract Constraint System" << endl;
@@ -142,7 +140,6 @@ InputAndProof IntkeyCircuit::prove(uint32_t value)
     read_pk_file >> pk;
     read_pk_file.close();
 
-    //todo: define constants
     //Assign circuit variables to prove: min <= value <= max
     pb.val(bit_len) = Fp(32);
     pb.val(intkey_value) = Fp(value);
