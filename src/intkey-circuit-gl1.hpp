@@ -70,11 +70,20 @@ class IntkeyCircuit {
 IntkeyCircuit::IntkeyCircuit() {
     ppT::init_public_params();
 
+    // Comparison gadget helper value; not a protoboard variable
     bit_len = 32;
-    intkey_value.allocate(pb, "Intkey Value");
+
+    // Primary Inputs
     intkey_min.allocate(pb, "Intkey Min");
     intkey_max.allocate(pb, "Intkey Max");
     is_less.allocate(pb, "Bool for Less Than and Less or Eq");
+
+    // Auxiliary Inputs
+    intkey_value.allocate(pb, "Intkey Value");
+
+    // Set the protoboard's understanding of which are primary and which are aux.
+    size_t primary_input_count = 3;
+    pb.set_input_sizes(primary_input_count);
 
     // Add "intkey set" constraint to pb (32-bit unsigned int)
     // Valid values must be integers in the range of 0 through 2^32 - 1
@@ -141,7 +150,8 @@ InputAndProof IntkeyCircuit::prove(uint32_t value)
     read_pk_file.close();
 
     //Assign circuit variables to prove: min <= value <= max
-    pb.val(bit_len) = Fp(32);
+    pb.clear_values();
+    //pb.val(bit_len) = Fp(32); //bit_len is not a protoboard variable
     pb.val(intkey_value) = Fp(value);
     pb.val(intkey_min) = Fp::zero();
     pb.val(intkey_max) = Fp(0xFFFFFFFF);
@@ -175,6 +185,9 @@ bool IntkeyCircuit::verify(InputAndProof input_and_proof)
     r1cs_ppzksnark_processed_verification_key<ppT> pvk;
     read_pvk_file >> pvk;
     read_pvk_file.close();
+
+    input_and_proof.proof.print_size();
+    cout << "Proof is well formed: " << input_and_proof.proof.is_well_formed() << endl;
 
     bool result;
     result = r1cs_ppzksnark_online_verifier_strong_IC<ppT>(pvk, input_and_proof.input, input_and_proof.proof);
